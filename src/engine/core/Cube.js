@@ -1,6 +1,7 @@
 import Cubelet from "./Cubelet";
 import MoveParser from "../moves/MoveParser";
 import MoveExecutor from "../moves/MoveExecutor";
+import AnimationQueue from "../animation/AnimationQueue";
 
 class Cube {
 
@@ -9,6 +10,8 @@ class Cube {
         this.cubelets = [];
         this.history = [];
         this.listeners = [];
+
+        this.animation = new AnimationQueue();
 
         this.createCube();
 
@@ -28,7 +31,9 @@ class Cube {
                         continue;
 
                     this.cubelets.push(
+
                         new Cubelet(id++, x, y, z)
+
                     );
 
                 }
@@ -49,9 +54,32 @@ class Cube {
 
         const moves = MoveParser.parse(algorithm);
 
+        moves.forEach(move => {
+
+            this.animation.add(move);
+
+        });
+
         this.history.push(algorithm);
 
-        MoveExecutor.execute(this, moves);
+    }
+
+    update() {
+
+        if (!this.animation.isRunning())
+            return;
+
+        const animation = this.animation.current();
+
+        animation.update();
+
+        if (animation.finished) {
+
+            MoveExecutor.execute(this, [animation.move]);
+
+            this.animation.update();
+
+        }
 
         this.notify();
 
@@ -65,17 +93,11 @@ class Cube {
 
     notify() {
 
-        this.listeners.forEach(listener => listener());
+        this.listeners.forEach(
 
-    }
+            listener => listener()
 
-    reset() {
-
-        this.cubelets = [];
-        this.history = [];
-        this.createCube();
-
-        this.notify();
+        );
 
     }
 

@@ -2,6 +2,8 @@ import Cubelet from "./Cubelet";
 import MoveParser from "../moves/MoveParser";
 import MoveExecutor from "../moves/MoveExecutor";
 import AnimationQueue from "../animation/AnimationQueue";
+import History from "../history/History";
+import Scrambler from "../scramble/Scrambler";
 
 class Cube {
 
@@ -12,6 +14,7 @@ class Cube {
         this.listeners = [];
 
         this.animation = new AnimationQueue();
+        this.historyManager = new History();
 
         this.createCube();
 
@@ -61,6 +64,7 @@ class Cube {
         });
 
         this.history.push(algorithm);
+        this.historyManager.push(algorithm);
 
     }
 
@@ -98,6 +102,28 @@ class Cube {
             listener => listener()
 
         );
+
+    }
+
+    scramble() {
+
+        const algorithm = Scrambler.generate();
+
+        this.execute(algorithm);
+
+    }
+
+    reset() {
+
+        this.cubelets = [];
+
+        this.history = [];
+
+        this.historyManager.clear();
+
+        this.createCube();
+
+        this.notify();
 
     }
 

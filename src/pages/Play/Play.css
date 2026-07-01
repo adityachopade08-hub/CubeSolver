@@ -1,0 +1,29 @@
+.play{
+
+    width:100vw;
+
+    height:100vh;
+
+    overflow:hidden;
+
+    background:
+
+    radial-gradient(circle at top,#1e3a8a 0%,#0b1120 45%,#050816 100%);
+
+}
+
+.mainLayout{
+
+    display:grid;
+
+    grid-template-columns:280px 1fr 300px;
+
+    gap:20px;
+
+    height:calc(100vh - 70px);
+
+    padding:20px;
+
+    box-sizing:border-box;
+
+}

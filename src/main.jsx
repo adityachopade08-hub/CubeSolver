@@ -5,8 +5,18 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 
+import { CubeProvider } from "./context/CubeContext";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
+
     <BrowserRouter>
-        <App />
+
+        <CubeProvider>
+
+            <App />
+
+        </CubeProvider>
+
     </BrowserRouter>
+
 );

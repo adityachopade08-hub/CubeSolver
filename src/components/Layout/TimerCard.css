@@ -1,0 +1,29 @@
+.timerCard{
+
+    background:rgba(255,255,255,.05);
+
+    backdrop-filter:blur(20px);
+
+    border-radius:20px;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    padding:25px;
+
+    color:white;
+
+    text-align:center;
+
+}
+
+.timerCard h1{
+
+    margin-top:10px;
+
+    font-size:48px;
+
+    color:#60a5fa;
+
+    font-family:monospace;
+
+}

@@ -1,0 +1,43 @@
+.rightPanel{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+.rightPanel h2{
+
+    color:white;
+
+}
+
+.historyCard{
+
+    background:rgba(255,255,255,.05);
+
+    backdrop-filter:blur(20px);
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:20px;
+
+    padding:20px;
+
+    color:white;
+
+    min-height:180px;
+
+}
+
+.historyCard p{
+
+    color:#60a5fa;
+
+    margin-top:15px;
+
+    word-break:break-word;
+
+}

@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Cube from "../../engine/core/Cube";
 import CubeletMesh from "./CubeletMesh";
@@ -11,7 +11,66 @@ function CubeScene() {
 
     const cube = cubeRef.current;
 
-    const cubelets = cube.getCubelets();
+    const [, forceUpdate] = useState(0);
+
+    useEffect(() => {
+
+        cube.subscribe(() => {
+
+            forceUpdate(n => n + 1);
+
+        });
+
+    }, []);
+
+    useEffect(() => {
+
+        function handleKey(e) {
+
+            switch (e.key) {
+
+                case "r":
+                case "R":
+                    cube.execute("R");
+                    break;
+
+                case "l":
+                case "L":
+                    cube.execute("L");
+                    break;
+
+                case "u":
+                case "U":
+                    cube.execute("U");
+                    break;
+
+                case "d":
+                case "D":
+                    cube.execute("D");
+                    break;
+
+                case "f":
+                case "F":
+                    cube.execute("F");
+                    break;
+
+                case "b":
+                case "B":
+                    cube.execute("B");
+                    break;
+
+                default:
+                    break;
+
+            }
+
+        }
+
+        window.addEventListener("keydown", handleKey);
+
+        return () => window.removeEventListener("keydown", handleKey);
+
+    }, []);
 
     return (
 
@@ -41,7 +100,7 @@ function CubeScene() {
 
             {
 
-                cubelets.map((cubelet) => (
+                cube.getCubelets().map((cubelet) => (
 
                     <CubeletMesh
                         key={cubelet.id}

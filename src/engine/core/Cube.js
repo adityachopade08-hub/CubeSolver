@@ -5,9 +5,13 @@ import MoveExecutor from "../moves/MoveExecutor";
 class Cube {
 
     constructor() {
+
         this.cubelets = [];
         this.history = [];
+        this.listeners = [];
+
         this.createCube();
+
     }
 
     createCube() {
@@ -15,18 +19,29 @@ class Cube {
         let id = 0;
 
         for (let z = -1; z <= 1; z++) {
+
             for (let y = 1; y >= -1; y--) {
+
                 for (let x = -1; x <= 1; x++) {
 
-                    if (x === 0 && y === 0 && z === 0) continue;
+                    if (x === 0 && y === 0 && z === 0)
+                        continue;
 
                     this.cubelets.push(
                         new Cubelet(id++, x, y, z)
                     );
 
                 }
+
             }
+
         }
+
+    }
+
+    getCubelets() {
+
+        return this.cubelets;
 
     }
 
@@ -38,11 +53,19 @@ class Cube {
 
         MoveExecutor.execute(this, moves);
 
+        this.notify();
+
     }
 
-    getCubelets() {
+    subscribe(listener) {
 
-        return this.cubelets;
+        this.listeners.push(listener);
+
+    }
+
+    notify() {
+
+        this.listeners.forEach(listener => listener());
 
     }
 
@@ -51,6 +74,8 @@ class Cube {
         this.cubelets = [];
         this.history = [];
         this.createCube();
+
+        this.notify();
 
     }
 

@@ -7,6 +7,7 @@ export function CubeProvider({ children }) {
     const [scramble, setScramble] = useState("");
     const [moveCount, setMoveCount] = useState(0);
     const [timer, setTimer] = useState("00:00.00");
+    const [tps, setTps] = useState("0.00");
 
     const value = useMemo(
         () => ({
@@ -18,8 +19,10 @@ export function CubeProvider({ children }) {
             setMoveCount,
             timer,
             setTimer,
+            tps,
+            setTps,
         }),
-        [moveCount, moves, scramble, timer]
+        [moveCount, moves, scramble, timer, tps]
     );
 
     return (

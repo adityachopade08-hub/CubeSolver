@@ -8,11 +8,25 @@ import { useCube } from "../../context/CubeContext";
 import { useCubeActions } from "../../context/CubeActions";
 import CubeletMesh from "./CubeletMesh";
 
-function Scene({ cube }) {
+function formatElapsedTime(elapsedMs) {
+    const totalCentiseconds = Math.floor(elapsedMs / 10);
+    const centiseconds = totalCentiseconds % 100;
+    const totalSeconds = Math.floor(totalCentiseconds / 100);
+    const seconds = totalSeconds % 60;
+    const minutes = Math.floor(totalSeconds / 60);
+
+    return [
+        String(minutes).padStart(2, "0"),
+        String(seconds).padStart(2, "0"),
+    ].join(":") + `.${String(centiseconds).padStart(2, "0")}`;
+}
+
+function Scene({ cube, onFrame }) {
     const [, refresh] = useState(0);
 
     useFrame(() => {
         cube.update();
+        onFrame();
         refresh((value) => value + 1);
     });
 
@@ -38,6 +52,8 @@ function Scene({ cube }) {
 function CubeScene() {
     const cubeRef = useRef(new Cube());
     const redoStackRef = useRef([]);
+    const timerStartRef = useRef(null);
+    const timerRunningRef = useRef(false);
     const viewportRef = useRef(null);
     const cube = cubeRef.current;
 
@@ -47,6 +63,7 @@ function CubeScene() {
         setMoves,
         setScramble,
         setTimer,
+        setTps,
     } = useCube();
 
     const { registerActions } = useCubeActions();
@@ -62,6 +79,32 @@ function CubeScene() {
         setMoves(nextMoves);
         setMoveCount(nextMoves.length);
     }, [setMoveCount, setMoves]);
+
+    const startTimer = useCallback(() => {
+        if (timerRunningRef.current) {
+            return;
+        }
+
+        timerStartRef.current = performance.now();
+        timerRunningRef.current = true;
+    }, []);
+
+    const handleFrame = useCallback(() => {
+        if (!timerRunningRef.current || timerStartRef.current === null) {
+            return;
+        }
+
+        const elapsedMs = performance.now() - timerStartRef.current;
+        const elapsedSeconds = elapsedMs / 1000;
+        const currentMoveCount = movesRef.current.length;
+
+        setTimer(formatElapsedTime(elapsedMs));
+        setTps(
+            elapsedSeconds > 0
+                ? (currentMoveCount / elapsedSeconds).toFixed(2)
+                : "0.00"
+        );
+    }, [setTimer, setTps]);
 
     const replayMoves = useCallback((nextMoves) => {
         cube.reset();
@@ -81,10 +124,11 @@ function CubeScene() {
         const nextMoves = normalized.split(/\s+/);
         const updatedMoves = [...movesRef.current, ...nextMoves];
 
+        startTimer();
         cube.execute(normalized);
         redoStackRef.current = [];
         syncMoveState(updatedMoves);
-    }, [cube, syncMoveState]);
+    }, [cube, startTimer, syncMoveState]);
 
     const scramble = useCallback(() => {
         const nextScramble = Scrambler.generate();
@@ -120,11 +164,14 @@ function CubeScene() {
 
     const reset = useCallback(() => {
         redoStackRef.current = [];
+        timerStartRef.current = null;
+        timerRunningRef.current = false;
         cube.reset();
         setScramble("");
         setTimer("00:00.00");
+        setTps("0.00");
         syncMoveState([]);
-    }, [cube, setScramble, setTimer, syncMoveState]);
+    }, [cube, setScramble, setTimer, setTps, syncMoveState]);
 
     const handleKeyDown = useCallback((event) => {
         const key = event.key.toUpperCase();
@@ -175,7 +222,7 @@ function CubeScene() {
                     fov: 45,
                 }}
             >
-                <Scene cube={cube} />
+                <Scene cube={cube} onFrame={handleFrame} />
             </Canvas>
         </div>
     );

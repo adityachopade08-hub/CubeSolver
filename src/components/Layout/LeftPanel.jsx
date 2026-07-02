@@ -8,7 +8,9 @@ function LeftPanel() {
 
         moveCount,
 
-        timer
+        timer,
+
+        tps
 
     } = useCube();
 
@@ -34,7 +36,7 @@ function LeftPanel() {
 
                 <h1>
 
-                    {moveCount === 0 ? "0.00" : "--"}
+                    {moveCount === 0 ? "0.00" : tps}
 
                 </h1>
 

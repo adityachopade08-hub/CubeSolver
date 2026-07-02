@@ -3,7 +3,9 @@ import { OrbitControls } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 
 import Cube from "../../engine/core/Cube";
-import CubeletMesh from "./CubeletMesh";
+import CubeRenderer from "./CubeRenderer";
+
+import { useCube } from "../../context/CubeContext";
 
 function Scene({ cube }) {
 
@@ -21,29 +23,24 @@ function Scene({ cube }) {
 
         <>
 
-            <color attach="background" args={["#111827"]} />
+            <color
+                attach="background"
+                args={["#111827"]}
+            />
 
             <ambientLight intensity={1.5} />
 
-            <directionalLight position={[5,5,5]} intensity={2}/>
+            <directionalLight
+                position={[5, 5, 5]}
+                intensity={2}
+            />
 
-            <directionalLight position={[-5,-5,-5]} intensity={1}/>
+            <directionalLight
+                position={[-5, -5, -5]}
+                intensity={1}
+            />
 
-            {
-
-                cube.getCubelets().map(cubelet=>(
-
-                    <CubeletMesh
-
-                        key={cubelet.id}
-
-                        cubelet={cubelet}
-
-                    />
-
-                ))
-
-            }
+            <CubeRenderer cube={cube} />
 
             <OrbitControls
 
@@ -67,39 +64,128 @@ function CubeScene() {
 
     const cube = cubeRef.current;
 
-    useEffect(()=>{
+    const {
 
-        function key(e){
+        setMoves,
 
-            cube.execute(
+        setMoveCount,
 
-                e.key.toUpperCase()
+        setScramble
 
-            );
+    } = useCube();
+
+    useEffect(() => {
+
+        function handleKey(e) {
+
+            const key = e.key.toUpperCase();
+
+            if (!"RLUDFB".includes(key))
+                return;
+
+            cube.execute(key);
+
+            setMoves(previous => [
+
+                ...previous,
+
+                key
+
+            ]);
+
+            setMoveCount(previous => previous + 1);
 
         }
 
-        window.addEventListener("keydown",key);
+        window.addEventListener(
 
-        return ()=>window.removeEventListener("keydown",key);
+            "keydown",
 
-    },[]);
+            handleKey
 
-    return(
+        );
+
+        const scrambleBtn = document.getElementById("scrambleBtn");
+
+        const resetBtn = document.getElementById("resetBtn");
+
+        const undoBtn = document.getElementById("undoBtn");
+
+        const redoBtn = document.getElementById("redoBtn");
+
+        scrambleBtn?.addEventListener("click", () => {
+
+            cube.scramble();
+
+            if (cube.history.length > 0) {
+
+                setScramble(
+
+                    cube.history[
+
+                        cube.history.length - 1
+
+                    ]
+
+                );
+
+            }
+
+        });
+
+        resetBtn?.addEventListener("click", () => {
+
+            cube.reset();
+
+            setMoves([]);
+
+            setMoveCount(0);
+
+            setScramble("");
+
+        });
+
+        undoBtn?.addEventListener("click", () => {
+
+            console.log("Undo Coming Soon");
+
+        });
+
+        redoBtn?.addEventListener("click", () => {
+
+            console.log("Redo Coming Soon");
+
+        });
+
+        return () => {
+
+            window.removeEventListener(
+
+                "keydown",
+
+                handleKey
+
+            );
+
+        };
+
+    }, []);
+
+    return (
 
         <Canvas
 
             camera={{
 
-                position:[6,6,6],
+                position: [6, 6, 6],
 
-                fov:45
+                fov: 45
 
             }}
 
         >
 
-            <Scene cube={cube}/>
+            <Scene cube={cube} />
 
         </Canvas>
 

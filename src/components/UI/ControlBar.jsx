@@ -1,20 +1,60 @@
 import "./ControlBar.css";
 
-function ControlBar() {
+import {
 
-    return (
+    useCubeActions
+
+} from "../../context/CubeActions";
+
+function ControlBar(){
+
+    const{
+
+        scramble,
+
+        reset,
+
+        undo,
+
+        redo,
+
+        solve
+
+    } = useCubeActions();
+
+    return(
 
         <div className="controls">
 
-            <button id="scrambleBtn">🎲 Scramble</button>
+            <button onClick={scramble}>
 
-            <button id="undoBtn">↩ Undo</button>
+                🎲 Scramble
 
-            <button id="redoBtn">↪ Redo</button>
+            </button>
 
-            <button id="resetBtn">🔄 Reset</button>
+            <button onClick={undo}>
 
-            <button id="solveBtn">🤖 Solve</button>
+                ↩ Undo
+
+            </button>
+
+            <button onClick={redo}>
+
+                ↪ Redo
+
+            </button>
+
+            <button onClick={reset}>
+
+                🔄 Reset
+
+            </button>
+
+            <button onClick={solve}>
+
+                🤖 Solve
+
+            </button>
 
         </div>
 

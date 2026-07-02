@@ -1,65 +1,39 @@
 import "./ControlBar.css";
 
-import {
+import { useCubeActions } from "../../context/CubeActions";
 
-    useCubeActions
-
-} from "../../context/CubeActions";
-
-function ControlBar(){
-
-    const{
-
+function ControlBar() {
+    const {
         scramble,
-
         reset,
-
         undo,
-
         redo,
-
-        solve
-
+        solve,
     } = useCubeActions();
 
-    return(
-
+    return (
         <div className="controls">
-
-            <button onClick={scramble}>
-
-                🎲 Scramble
-
+            <button type="button" onClick={scramble}>
+                Scramble
             </button>
 
-            <button onClick={undo}>
-
-                ↩ Undo
-
+            <button type="button" onClick={undo}>
+                Undo
             </button>
 
-            <button onClick={redo}>
-
-                ↪ Redo
-
+            <button type="button" onClick={redo}>
+                Redo
             </button>
 
-            <button onClick={reset}>
-
-                🔄 Reset
-
+            <button type="button" onClick={reset}>
+                Reset
             </button>
 
-            <button onClick={solve}>
-
-                🤖 Solve
-
+            <button type="button" onClick={solve}>
+                Solve
             </button>
-
         </div>
-
     );
-
 }
 
 export default ControlBar;

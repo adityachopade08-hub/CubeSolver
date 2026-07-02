@@ -1,196 +1,132 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import Cube from "../../engine/core/Cube";
-import CubeRenderer from "./CubeRenderer";
-
+import Scrambler from "../../engine/scramble/Scrambler";
 import { useCube } from "../../context/CubeContext";
+import { useCubeActions } from "../../context/CubeActions";
+import CubeletMesh from "./CubeletMesh";
 
 function Scene({ cube }) {
-
     const [, refresh] = useState(0);
 
     useFrame(() => {
-
         cube.update();
-
-        refresh(v => v + 1);
-
+        refresh((value) => value + 1);
     });
 
     return (
-
         <>
-
-            <color
-                attach="background"
-                args={["#111827"]}
-            />
+            <color attach="background" args={["#111827"]} />
 
             <ambientLight intensity={1.5} />
 
-            <directionalLight
-                position={[5, 5, 5]}
-                intensity={2}
-            />
+            <directionalLight position={[5, 5, 5]} intensity={2} />
 
-            <directionalLight
-                position={[-5, -5, -5]}
-                intensity={1}
-            />
+            <directionalLight position={[-5, -5, -5]} intensity={1} />
 
-            <CubeRenderer cube={cube} />
+            {cube.getCubelets().map((cubelet) => (
+                <CubeletMesh key={cubelet.id} cubelet={cubelet} />
+            ))}
 
-            <OrbitControls
-
-                enablePan={false}
-
-                minDistance={5}
-
-                maxDistance={15}
-
-            />
-
+            <OrbitControls enablePan={false} minDistance={5} maxDistance={15} />
         </>
-
     );
-
 }
 
 function CubeScene() {
-
     const cubeRef = useRef(new Cube());
-
+    const viewportRef = useRef(null);
     const cube = cubeRef.current;
 
     const {
-
-        setMoves,
-
         setMoveCount,
-
-        setScramble
-
+        setMoves,
+        setScramble,
     } = useCube();
 
-    useEffect(() => {
+    const { registerActions } = useCubeActions();
 
-        function handleKey(e) {
+    const executeMove = useCallback((algorithm) => {
+        const normalized = algorithm.trim().toUpperCase();
 
-            const key = e.key.toUpperCase();
-
-            if (!"RLUDFB".includes(key))
-                return;
-
-            cube.execute(key);
-
-            setMoves(previous => [
-
-                ...previous,
-
-                key
-
-            ]);
-
-            setMoveCount(previous => previous + 1);
-
+        if (!normalized) {
+            return;
         }
 
-        window.addEventListener(
+        const nextMoves = normalized.split(/\s+/);
 
-            "keydown",
+        cube.execute(normalized);
+        setMoves((previous) => [...previous, ...nextMoves]);
+        setMoveCount((previous) => previous + nextMoves.length);
+    }, [cube, setMoveCount, setMoves]);
 
-            handleKey
+    const scramble = useCallback(() => {
+        const nextScramble = Scrambler.generate();
 
-        );
+        setScramble(nextScramble);
+        executeMove(nextScramble);
+    }, [executeMove, setScramble]);
 
-        const scrambleBtn = document.getElementById("scrambleBtn");
+    const reset = useCallback(() => {
+        cube.reset();
+        setMoves([]);
+        setScramble("");
+        setMoveCount(0);
+    }, [cube, setMoveCount, setMoves, setScramble]);
 
-        const resetBtn = document.getElementById("resetBtn");
+    const handleKeyDown = useCallback((event) => {
+        const key = event.key.toUpperCase();
 
-        const undoBtn = document.getElementById("undoBtn");
+        if (!"RLUDFB".includes(key)) {
+            return;
+        }
 
-        const redoBtn = document.getElementById("redoBtn");
+        event.preventDefault();
+        executeMove(key);
+    }, [executeMove]);
 
-        scrambleBtn?.addEventListener("click", () => {
-
-            cube.scramble();
-
-            if (cube.history.length > 0) {
-
-                setScramble(
-
-                    cube.history[
-
-                        cube.history.length - 1
-
-                    ]
-
-                );
-
-            }
-
-        });
-
-        resetBtn?.addEventListener("click", () => {
-
-            cube.reset();
-
-            setMoves([]);
-
-            setMoveCount(0);
-
-            setScramble("");
-
-        });
-
-        undoBtn?.addEventListener("click", () => {
-
-            console.log("Undo Coming Soon");
-
-        });
-
-        redoBtn?.addEventListener("click", () => {
-
-            console.log("Redo Coming Soon");
-
-        });
-
-        return () => {
-
-            window.removeEventListener(
-
-                "keydown",
-
-                handleKey
-
-            );
-
-        };
-
+    const focusViewport = useCallback(() => {
+        viewportRef.current?.focus();
     }, []);
 
+    useEffect(() => {
+        registerActions({
+            executeMove,
+            reset,
+            scramble,
+        });
+
+        focusViewport();
+
+        return () => {
+            registerActions();
+        };
+    }, [executeMove, focusViewport, registerActions, reset, scramble]);
+
     return (
-
-        <Canvas
-
-            camera={{
-
-                position: [6, 6, 6],
-
-                fov: 45
-
+        <div
+            ref={viewportRef}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            onPointerDown={focusViewport}
+            style={{
+                height: "100%",
+                outline: "none",
+                width: "100%",
             }}
-
         >
-
-            <Scene cube={cube} />
-
-        </Canvas>
-
+            <Canvas
+                camera={{
+                    position: [6, 6, 6],
+                    fov: 45,
+                }}
+            >
+                <Scene cube={cube} />
+            </Canvas>
+        </div>
     );
-
 }
 
 export default CubeScene;

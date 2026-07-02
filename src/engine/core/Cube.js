@@ -118,6 +118,7 @@ class Cube {
         this.cubelets = [];
 
         this.history = [];
+        this.animation = new AnimationQueue();
 
         this.historyManager.clear();
 

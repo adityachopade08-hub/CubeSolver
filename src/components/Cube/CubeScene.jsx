@@ -37,16 +37,39 @@ function Scene({ cube }) {
 
 function CubeScene() {
     const cubeRef = useRef(new Cube());
+    const redoStackRef = useRef([]);
     const viewportRef = useRef(null);
     const cube = cubeRef.current;
 
     const {
+        moves,
         setMoveCount,
         setMoves,
         setScramble,
+        setTimer,
     } = useCube();
 
     const { registerActions } = useCubeActions();
+
+    const movesRef = useRef(moves);
+
+    useEffect(() => {
+        movesRef.current = moves;
+    }, [moves]);
+
+    const syncMoveState = useCallback((nextMoves) => {
+        movesRef.current = nextMoves;
+        setMoves(nextMoves);
+        setMoveCount(nextMoves.length);
+    }, [setMoveCount, setMoves]);
+
+    const replayMoves = useCallback((nextMoves) => {
+        cube.reset();
+
+        if (nextMoves.length > 0) {
+            cube.execute(nextMoves.join(" "));
+        }
+    }, [cube]);
 
     const executeMove = useCallback((algorithm) => {
         const normalized = algorithm.trim().toUpperCase();
@@ -56,11 +79,12 @@ function CubeScene() {
         }
 
         const nextMoves = normalized.split(/\s+/);
+        const updatedMoves = [...movesRef.current, ...nextMoves];
 
         cube.execute(normalized);
-        setMoves((previous) => [...previous, ...nextMoves]);
-        setMoveCount((previous) => previous + nextMoves.length);
-    }, [cube, setMoveCount, setMoves]);
+        redoStackRef.current = [];
+        syncMoveState(updatedMoves);
+    }, [cube, syncMoveState]);
 
     const scramble = useCallback(() => {
         const nextScramble = Scrambler.generate();
@@ -69,12 +93,38 @@ function CubeScene() {
         executeMove(nextScramble);
     }, [executeMove, setScramble]);
 
+    const undo = useCallback(() => {
+        if (movesRef.current.length === 0) {
+            return;
+        }
+
+        const updatedMoves = movesRef.current.slice(0, -1);
+        const removedMove = movesRef.current[movesRef.current.length - 1];
+
+        redoStackRef.current.push(removedMove);
+        replayMoves(updatedMoves);
+        syncMoveState(updatedMoves);
+    }, [replayMoves, syncMoveState]);
+
+    const redo = useCallback(() => {
+        if (redoStackRef.current.length === 0) {
+            return;
+        }
+
+        const restoredMove = redoStackRef.current.pop();
+        const updatedMoves = [...movesRef.current, restoredMove];
+
+        replayMoves(updatedMoves);
+        syncMoveState(updatedMoves);
+    }, [replayMoves, syncMoveState]);
+
     const reset = useCallback(() => {
+        redoStackRef.current = [];
         cube.reset();
-        setMoves([]);
         setScramble("");
-        setMoveCount(0);
-    }, [cube, setMoveCount, setMoves, setScramble]);
+        setTimer("00:00.00");
+        syncMoveState([]);
+    }, [cube, setScramble, setTimer, syncMoveState]);
 
     const handleKeyDown = useCallback((event) => {
         const key = event.key.toUpperCase();
@@ -94,8 +144,10 @@ function CubeScene() {
     useEffect(() => {
         registerActions({
             executeMove,
+            redo,
             reset,
             scramble,
+            undo,
         });
 
         focusViewport();
@@ -103,7 +155,7 @@ function CubeScene() {
         return () => {
             registerActions();
         };
-    }, [executeMove, focusViewport, registerActions, reset, scramble]);
+    }, [executeMove, focusViewport, redo, registerActions, reset, scramble, undo]);
 
     return (
         <div
